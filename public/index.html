@@ -1,0 +1,226 @@
+ <!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editeur de playlist</title>
+
+  
+</head>
+<body >
+
+<nav class="navbar navbar-default">
+  <div class="container-fluid">
+    <a class="navbar-brand">Playlist</a>
+    <button class="btn btn-default navbar-btn pull-right" data-toggle="modal" data-target="#modConfig">
+      <i class="fa fa-gear" aria-hidden="true"></i>
+    </button>
+    <button class="btn btn-default navbar-btn pull-right" data-toggle="modal" data-target="#modInfo">
+      <i class="fa fa-info-circle" aria-hidden="true"></i>
+    </button>
+  </div>
+</nav>
+
+<div id="modInfo" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Informations</h4>
+      </div>
+      <div class="modal-body" text-align>
+        Les boutons d'ajout de piste se verrouillent automatiquement lorsque la liste de lecture est complète.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="config">
+  <!-- Modal -->
+  <div id="modConfig" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Préférences</h4>
+        </div>
+        <div class="modal-body" text-align>
+          <form>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" v-model="confirmAction"> Demander une confirmation des actions
+            </div>
+            <div class="checkbox">
+              <label>
+                <input type="checkbox" v-model="showVideoInPlaylist"> Afficher les vidéos dans la playlist
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="main" class="container">
+<div id="mainrowid" class="row">
+  <div class="col-xs-12 toolbar">
+    <div class="input-group">
+      <span class="input-group-btn">
+      <button id="lockerid" class="btn btn-default" v-on:click="savePlaylist()">
+        <i class="fa fa-floppy-o"></i>
+      </button>
+      <button class="btn btn-default" type="button">
+        <span class="badge">0</span>
+      </button>
+    </span> 
+    <select class="form-control" v-on:change="changeDay">
+      <option v-for="(day, index) in days">{{ day.label }}</option>
+    </select>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<br/>
+<div id="app" class="container-fluid">
+  <div class="row">
+    <div class="col-md-12">
+    <div v-show="isEmpty()">
+      <button type="button" class="btn btn-sm btn-default" data-toggle="modal" data-target="#modTrackpicker">
+        <i class="fa fa-lg fa-plus" aria-hidden="true"></i>
+      </button>
+    </div>
+    <table class="table table-hover" v-show="!isEmpty()">
+      <tr v-for="(track, index) in enrichedPlaylist">
+        <td><span v-text="track.literalStart"></span></td>
+        <td>
+          <div class="media">
+            <div class="media-left" v-show="cfg.showVideoInPlaylist" >
+              <video width="160" height="120" controls>
+              <!-- <video width="80em" height="60em" controls> -->
+                <source v-bind:src="track.filepath" type="video/mp4">
+                Your browser does not support the video tag.
+              </video> 
+            </div>
+            <div class="media-body">
+              <h4 class="media-heading">{{ track.title }}</h4>
+              <p><span>{{ track.duration }}</span> {{ track.typeDesc }} </p>
+              <p class="hidden-xs">desc{{ track.description }}</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <table>
+            <tr>
+              <td>
+                <button type="button" class="btn btn-sm btn-default" data-toggle="modal" v-on:click="setPosition(index, -1)" data-target="#modTrackpicker" :disabled="isMaxSizeReached">
+                  <i class="fa fa-lg fa-level-up" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+            <tr height="40">
+              <td v-show="cfg.confirmAction">
+                <button type="button" class="btn btn-sm btn-danger" v-on:click="setToDelete(index)" data-toggle="modal" data-target="#modWarning">
+                  <i class="fa fa-minus" aria-hidden="true"></i>
+                </button>
+              </td>
+              <td v-show="!cfg.confirmAction">
+                <button type="button" class="btn btn-sm btn-danger" v-on:click="deleteTrack(index)" data-target="#modWarning">
+                  <i class="fa fa-minus" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button type="button" class="btn btn-sm btn-default" data-toggle="modal" v-on:click="setPosition(index, 1)" data-target="#modTrackpicker" :disabled="isMaxSizeReached">
+                  <i class="fa fa-lg fa-level-down" aria-hidden="true"></i>
+                </button>
+              </td>
+            </tr>
+          </table>          
+        </td>
+      </tr>
+    </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modWarning" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content-->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Attention !</h4>
+        </div>
+        <div class="modal-body">
+          êtes-vous certains de vouloir enlever la vidéo de la playlist ?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" v-on:click="deleteTrack()" data-dismiss="modal">Effacer</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Annuler</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="trackpicker">
+  <!-- Modal -->
+  <div id="modTrackpicker" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+      <!-- Modal content -->
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="modal-title">Sélectionner une vidéo à insérer</h4>
+        </div>
+        <div class="modal-body">
+          <ul class="media-list">
+            <li class="media" v-for="track in tracks">
+              <div class="media-left">
+                <video width="160" height="120" controls>
+                  <source v-bind:src="track.filepath" type="video/mp4">
+                  Your browser does not support the video tag.
+                </video> 
+              </div>
+              <div class="media-body">
+                <h4 class="media-heading">{{ track.title }}</h4>
+                <p><span>[{{ track.duration }}]</span> {{ track.typeDesc }} </p>
+                <button class="btn btn-default" type="button" id="addItem" v-on:click="addTrack(track.id)" :disabled="!isAddingAllowed()">ajouter</button>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">fermer</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<link href="http://netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css" rel="stylesheet">
+<script src="https://npmcdn.com/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/vue.resource/0.9.1/vue-resource.min.js"></script>
+<script src="app.js"></script>
+</html>

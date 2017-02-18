@@ -1,2 +1,1 @@
-# pl-editor
-Editeur de playlist video
+# Editeur de playlists video
