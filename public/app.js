@@ -76,7 +76,7 @@ var pl = new Vue({
 
     save: function(dayIndex){
       console.log(dayIndex);
-      this.$http.post(this.apiRoot + this.apiDays[dayIndex], JSON.stringify(pl.rawPlaylist))
+      this.$http.patch(this.apiRoot + this.apiDays[dayIndex], JSON.stringify(pl.rawPlaylist))
       .then((response) => {
         console.info('sauvegarde ok');
       }, (response) => {
@@ -94,7 +94,10 @@ var pl = new Vue({
       pl.$http.get(url)
       .then((response) => {
         console.log(response.data);
-        pl.rawPlaylist = JSON.parse(response.data);
+        pl.rawPlaylist = response.data;
+        if(typeof response.data === 'string')
+          pl.rawPlaylist = JSON.parse(response.data);
+        console.log(typeof response.data, pl.rawPlaylist);
         pl.tracks = tracks;
         pl.buildPlaylist();
       }, (response) => {
@@ -132,22 +135,24 @@ var pl = new Vue({
 
     buildPlaylist: function() {      
       var enrichedPlaylist = [];
-      pl.rawPlaylist.forEach(function(trackId) {
-        console.log(trackId);
-        var track = pl.tracks.filter(function(track) {
-          return track.id == trackId;
-        }).pop();
-        pl.__calculateStartTime(track, enrichedPlaylist);
-        console.log(track);
-        enrichedPlaylist.push(Object.assign({}, track));
-      });
-      pl.enrichedPlaylist = enrichedPlaylist;
-      console.log('enrichedPlaylist');
-      console.log(enrichedPlaylist);
+      console.log(pl.rawPlaylist);
+      if(pl.rawPlaylist.length > 0) {
+        pl.rawPlaylist.forEach(function(trackId) {
+          console.log(trackId);
+          var track = pl.tracks.filter(function(track) {
+            return track.id == trackId;
+          }).pop();
+          pl.__calculateStartTime(track, enrichedPlaylist);
+          console.log(track);
+          enrichedPlaylist.push(Object.assign({}, track));
+        });
+        pl.enrichedPlaylist = enrichedPlaylist;
+        console.log('enrichedPlaylist');
+        console.log(enrichedPlaylist, enrichedPlaylist.length);
 
-      this.isMaxSizeReached = this.enrichedPlaylist[enrichedPlaylist.length - 1].startTime >= this.end;
-      console.log('isMaxSizeReached ' + this.isMaxSizeReached);
-      
+        this.isMaxSizeReached = this.enrichedPlaylist[enrichedPlaylist.length - 1].startTime >= this.end;
+        console.log('isMaxSizeReached ' + this.isMaxSizeReached);
+      }
     },
 
     __calculateStartTime: function(newTrack, enrichedPlaylist) {
