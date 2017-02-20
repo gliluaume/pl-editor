@@ -1,7 +1,9 @@
 'use strict';
 const express = require('express');
+const bodyParser = require('body-parser');
 const path = require('path');
 const trace = require('./logger');
+const plRepo = require('./pl-repo');
 
 const port = parseInt(process.argv[2], 10);
 const resources = path.join(__dirname, 'public');
@@ -10,14 +12,13 @@ const app = express();
 app.listen(port);
 console.log('listening on', port);
 
-app.use(trace);
+app.use(bodyParser.json());
+app.use(trace.req);
 app.use('/', express.static(resources))
+app.use('/public', express.static(resources))
 
 
-
-
-
-const tracks = [
+var tracks = [
   {
   'id': 9,
   'filepath': 'resources/CAP_0009_180630.mp4',
@@ -48,10 +49,19 @@ const tracks = [
 ];
 
 app.get('/api/track', (req, res) => {
-  res.send(JSON.stringify(tracks));
+  plRepo.listFiles().then(function(promises){
+    Promise.all(promises)
+    .then(results => {
+      console.log('resolution globale');
+      tracks = results;
+      console.log('tracks', tracks);
+      res.send(JSON.stringify(tracks));
+    })
+    .catch(e => {
+      console.error(e);
+    })
+  });
 });
-
-
 
 const playlists = {
   'mon' : [9, 7, 3, 7, 9], 
@@ -67,3 +77,7 @@ app.get('/api/playlist/:day', (req, res) => {
   res.send(playlists[req.params.day]);
 });
 
+
+app.patch('/api/playlist/:day', (req, res) => {
+  console.log('patch', req.url, req.params, req.body);
+});

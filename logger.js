@@ -1,8 +1,12 @@
 'use strict';
 
-var trace = function(req, res, next) {
-  console.log(req.url);
-  next();
+var trace = {
+  req: function(req, res, next) {
+    console.log('request', req.url);
+    next();
+  }
 };
 
- module.exports = trace;
+
+
+module.exports = trace;
