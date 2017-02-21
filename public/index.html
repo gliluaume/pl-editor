@@ -72,24 +72,23 @@
 
 
 <div id="main" class="container">
-<div id="mainrowid" class="row">
-  <div class="col-xs-12 toolbar">
-    <div class="input-group">
-      <span class="input-group-btn">
-      <button id="lockerid" class="btn btn-default" v-on:click="savePlaylist()">
-        <i class="fa fa-floppy-o"></i>
-      </button>
-      <button class="btn btn-default" type="button">
-        <span class="badge">0</span>
-      </button>
-    </span> 
-    <select class="form-control" v-on:change="changeDay">
-      <option v-for="(day, index) in days">{{ day.label }}</option>
-    </select>
-
+  <div id="mainrowid" class="row">
+    <div class="col-xs-12 toolbar">
+      <div class="input-group">
+        <span class="input-group-btn">
+          <button id="lockerid" class="btn btn-default" v-on:click="savePlaylist()">
+            <i class="fa fa-floppy-o"></i>
+          </button>
+          <button class="btn btn-default" type="button">
+            <span class="badge">0</span>
+          </button>
+        </span> 
+      <select class="form-control" v-on:change="changeDay">
+        <option v-for="(day, index) in days">{{ day.label }}</option>
+      </select>
+      </div>
     </div>
   </div>
-</div>
 </div>
 
 <br/>
