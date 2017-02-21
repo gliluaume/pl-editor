@@ -1,16 +1,15 @@
 'use strict';
 
 const fs = require('fs');
+const dateFormat = require('date-format');
 const exec = require('child_process').exec;
+const path = require('path');
 
 // Configuration
-const configuration = require('./configuration');
-const tagMapping = configuration.tagMapping;
-const playlists = configuration.playlists;
+const cfg = require('./configuration');
+const tagMapping = cfg.tagMapping;
+const playlists = cfg.playlists;
 
-
-
-const path = require('path');
 const videoDir = path.join(__dirname, 'public/resources');
 const publicDir = path.join(__dirname, 'public/');
 const videoExt = '.mp4';
@@ -67,7 +66,7 @@ var trackDescBuilder = function(filename, callback) {
 };
 
 var plRepo = {
-  videoFiles: [],
+  tracks: [],
   listFiles : function() { 
     return new Promise((resolve, reject) => {
       fs.readdir(videoDir, function(error, files) {
@@ -76,9 +75,95 @@ var plRepo = {
         }).map(function(filename) {
           return trackDescBuilder(filename);
         });
+        plRepo.tracks = ret;
         resolve(ret);
       });
     });
+  },
+
+  calculatePlaylist: function(day, trackIds) {
+    let playlistFile = path.join(cfg.environment.plPath, cfg.playlists[day]);
+
+    var playlistDesc = {};
+    plRepo.tracks.forEach(function(track) {
+      playlistDesc[track.id] = track.filepath;
+    });
+
+    var filepaths = [];
+    trackIds.forEach(function(trackId) {
+      // trackId=1234;
+      let trackpath = playlistDesc[trackId];
+
+      if(!trackpath)
+        throw `track id ${trackId} unknown !`;    
+      
+      filepaths.push(path.join(cfg.environment.plVideoPath, trackpath));
+    });
+
+    return filepaths;
+  },
+
+  writePlaylistFile: function(playlistpath, trackpaths, callback) {
+    let text = '';
+
+    if(trackpaths.length > 0) {
+      text = trackpaths.reduce(function(acc, elt) {
+        return acc + '\n' + elt;
+      });
+    } 
+
+    fs.writeFile(playlistpath, text, (err) => {
+      if (err) throw err;
+      console.log('file saved.');
+      if(callback) callback();
+    });
+
+  },
+
+  formatDate: function() {
+    return dateFormat.asString('yyyy-MM-dd-hhmmss.SSS', new Date());
+  },
+
+  writePlaylist: function(playlistpath, trackpaths, callback) {
+    console.log('writePlaylist in', playlistpath, trackpaths);
+    if(fs.existsSync(playlistpath)) {
+      let newName = `${playlistpath}-${plRepo.formatDate()}`;
+      console.log('rename old file to ', newName);
+      fs.rename(playlistpath, newName, function() {
+        plRepo.writePlaylistFile(playlistpath, trackpaths, callback);
+      });
+    } 
+    else {
+      console.log('writing a new file');
+      plRepo.writePlaylistFile(playlistpath, trackpaths, callback);
+    }
+  },
+
+  savePlaylist: function(day, trackIds) {
+    let playlistpath = path.join(cfg.environment.plPath, cfg.playlists[day]);
+    var trackpaths;
+
+    if(plRepo.tracks.length < 2) {
+      plRepo.listFiles().then(function(promises){
+        Promise.all(promises)
+        .then(results => {
+          plRepo.tracks = results;
+          trackpaths = plRepo.calculatePlaylist(day, trackIds);
+          plRepo.writePlaylist(playlistpath, trackpaths, () => {
+            return trackpaths;
+          });
+        })
+        .catch(e => {
+          throw 'accessing files failed.'
+        })
+      });
+    } 
+    else {
+      trackpaths = plRepo.calculatePlaylist(day, trackIds);
+      plRepo.writePlaylist(playlistpath, trackpaths, () => {
+        return trackpaths;
+      });
+    }
   }
 };
 

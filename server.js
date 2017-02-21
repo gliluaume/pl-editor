@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const trace = require('./logger');
 const plRepo = require('./pl-repo');
+const cfg = require('./configuration');
 
 const port = parseInt(process.argv[2], 10);
 const resources = path.join(__dirname, 'public');
@@ -14,7 +15,7 @@ console.log('listening on', port);
 
 app.use(bodyParser.json());
 app.use(trace.req);
-app.use('/', express.static(resources))
+app.use('/', express.static(resources));
 app.use('/public', express.static(resources))
 
 
@@ -53,9 +54,9 @@ app.get('/api/track', (req, res) => {
     Promise.all(promises)
     .then(results => {
       console.log('resolution globale');
-      tracks = results;
-      console.log('tracks', tracks);
-      res.send(JSON.stringify(tracks));
+      plRepo.tracks = results;
+      console.log('tracks', plRepo.tracks);
+      res.send(JSON.stringify(plRepo.tracks));
     })
     .catch(e => {
       console.error(e);
@@ -80,4 +81,23 @@ app.get('/api/playlist/:day', (req, res) => {
 
 app.patch('/api/playlist/:day', (req, res) => {
   console.log('patch', req.url, req.params, req.body);
+  let resBody = 'ok';
+
+  let filepaths = [];
+  try {
+    filepaths = plRepo.savePlaylist(req.params.day, req.body);
+  } catch(e){
+    res.statusCode = 409;
+    resBody = e;
+    console.log(e);
+  }
+
+  res.send(resBody);
 });
+
+/*
+Tests à mettre en place:
+envoyer un patch de playlist avec un id de track qui n'est pas connu => 409
+sauvegarder une playlist vide
+
+*/

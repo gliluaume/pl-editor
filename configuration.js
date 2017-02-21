@@ -17,7 +17,9 @@ const configuration = {
   },
 
   environment: {
-    videoExt: '.mp4'
+    videoExt: '.mp4',
+    plVideoPath: '/home/guillaume/Documents/projets/pl-editor/public/resources',
+    plPath: '/home/guillaume/Documents/projets/pl-editor/public/playlist'
   }
 };
 
