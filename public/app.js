@@ -7,12 +7,12 @@ var config = new Vue({
   methods: { }
 });
 
-// playlist controler
+// playlist controller
 var pc = new Vue({
   el:'#main',
   data: {
     days:[],
-    selectedDayIndex: undefined,
+    selectedDayIndex: null,
     isReady: false
   },
 
@@ -30,10 +30,11 @@ var pc = new Vue({
     },
 
     ready: function() {
-      this.selectedDayIndex = this.days[0];
+      // this.selectedDayIndex = this.days[0];
+      this.selectedDayIndex = 0;
       pl.load(0, tp.tracks);
       this.isReady = true;
-      console.log('ready !');
+      console.log('ready !', this.selectedDayIndex);
     },
 
     savePlaylist: function() {
@@ -75,7 +76,6 @@ var pl = new Vue({
     },      
 
     save: function(dayIndex){
-      console.log(dayIndex);
       this.$http.patch(this.apiRoot + this.apiDays[dayIndex], JSON.stringify(pl.rawPlaylist))
       .then((response) => {
         console.info('sauvegarde ok');
