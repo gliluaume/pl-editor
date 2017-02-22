@@ -3,15 +3,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const trace = require('./logger');
-const plRepo = require('./pl-repo');
-const cfg = require('./configuration');
+const plRepo = require('./pl-repo')();
 
-const port = parseInt(process.argv[2], 10);
+var port = parseInt(process.argv[2], 10);
 const resources = path.join(__dirname, 'public');
 const app = express();
 
-app.listen(port);
-console.log('listening on', port);
+if(port){
+  app.listen(port);
+  console.log('listening on', port);
+}
 
 app.use(bodyParser.json());
 app.use(trace.req);
@@ -101,3 +102,6 @@ envoyer un patch de playlist avec un id de track qui n'est pas connu => 409
 sauvegarder une playlist vide
 
 */
+
+
+module.exports = app;

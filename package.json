@@ -4,8 +4,7 @@
   "description": "video playlist editor",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "mocha ./spec/"
   },
   "repository": {
     "type": "git",
@@ -19,6 +18,9 @@
   "homepage": "https://github.com/gliluaume/pl-editor#readme",
   "dependencies": {
     "body-parser": "^1.16.1",
-    "express": "^4.14.1"
+    "date-format": "^1.0.0",
+    "express": "^4.14.1",
+    "mocha": "^3.2.0",
+    "supertest": "^3.0.0"
   }
 }
